@@ -7,7 +7,6 @@ from pydantic_ai import Agent
 from pydantic_ai.capabilities import Capability
 from pydantic_ai.models.test import TestModel
 
-import pydantic_ai_harness.coder
 from pydantic_ai_harness.coder import DEFAULT_ALLOWED_COMMANDS, Coder, coder_agent
 from pydantic_ai_harness.compaction import ClearToolResults, WarnNearLimits
 from pydantic_ai_harness.filesystem import FileSystem
@@ -49,6 +48,7 @@ def test_coder_agent_export_is_lazy() -> None:
 
 
 def test_coder_unknown_export() -> None:
+    import pydantic_ai_harness.coder
 
     with pytest.raises(AttributeError, match='has no attribute'):
         pydantic_ai_harness.coder.__getattr__('missing')
