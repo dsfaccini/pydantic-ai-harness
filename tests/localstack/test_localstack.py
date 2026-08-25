@@ -399,8 +399,7 @@ class TestLocalStackCapability:
     def test_exported_from_submodule(self) -> None:
 
         assert Exported is LocalStack
-        # Capabilities are reached via their submodule, not the package root, so each keeps its own optional deps.
-        assert 'LocalStack' not in pydantic_ai_harness.__all__
+        assert pydantic_ai_harness.LocalStack is LocalStack
 
 
 class TestContainerManagement:
