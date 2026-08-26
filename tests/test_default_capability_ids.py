@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 from pydantic_ai import Agent
 from pydantic_ai.models.test import TestModel
+from pydantic_ai.toolsets import AbstractToolset
 
 
 def _no_arguments() -> dict[str, Any]:
@@ -21,7 +22,10 @@ def _path_argument(name: str) -> Callable[[], dict[str, Any]]:
 
 
 def _browser_arguments() -> dict[str, Any]:
-    return {'browser_agent': lambda task: None}
+    def _browser_agent(task: object) -> None:
+        return None
+
+    return {'browser_agent': _browser_agent}
 
 
 def _exa_search_arguments() -> dict[str, Any]:
@@ -33,7 +37,7 @@ def _exa_agent_arguments() -> dict[str, Any]:
 
 
 def _sub_agents_arguments() -> dict[str, Any]:
-    subagents = pytest.importorskip('pydantic_ai_harness.subagents')
+    subagents = pytest.importorskip('pydantic_ai_harness.subagents', exc_type=ImportError)
     return {
         'agents': [subagents.SubAgent(Agent(TestModel(), name='worker'))],
         'agent_folders': [],
@@ -55,9 +59,13 @@ def _you_arguments() -> dict[str, Any]:
 CapabilityFactory = Callable[[], dict[str, Any]]
 
 
-def _leaf_ids(toolset: Any) -> list[str | None]:
+def _leaf_ids(toolset: AbstractToolset[Any]) -> list[str | None]:
     ids: list[str | None] = []
-    toolset.apply(lambda leaf: ids.append(leaf.id))
+
+    def _collect(leaf: AbstractToolset[Any]) -> None:
+        ids.append(leaf.id)
+
+    toolset.apply(_collect)
     return ids
 
 
@@ -121,7 +129,7 @@ def test_default_and_custom_ids_reach_toolsets(
     default_toolset_id: str,
     arguments: CapabilityFactory,
 ) -> None:
-    module = pytest.importorskip(module_name)
+    module = pytest.importorskip(module_name, exc_type=ImportError)
     capability_class: Any = getattr(module, class_name)
     kwargs = arguments()
 
@@ -144,7 +152,7 @@ def test_default_and_custom_ids_reach_toolsets(
     ),
 )
 def test_run_scoped_toolsets_keep_custom_id(module_name: str, class_name: str) -> None:
-    module = pytest.importorskip(module_name)
+    module = pytest.importorskip(module_name, exc_type=ImportError)
     capability_class: Any = getattr(module, class_name)
     toolset = capability_class(id='custom').get_toolset()
 
@@ -154,7 +162,7 @@ def test_run_scoped_toolsets_keep_custom_id(module_name: str, class_name: str) -
 
 
 def test_filtered_filesystem_keeps_the_leaf_id() -> None:
-    filesystem = pytest.importorskip('pydantic_ai_harness.filesystem')
+    filesystem = pytest.importorskip('pydantic_ai_harness.filesystem', exc_type=ImportError)
 
     toolset = filesystem.FileSystem(id='custom', read_only=True).get_toolset()
 
@@ -176,7 +184,7 @@ def test_established_toolset_ids_survive_explicit_none(
     toolset_id: str,
     arguments: CapabilityFactory,
 ) -> None:
-    module = pytest.importorskip(module_name)
+    module = pytest.importorskip(module_name, exc_type=ImportError)
     capability_class: Any = getattr(module, class_name)
     capability = capability_class(**arguments(), id=None)
 
